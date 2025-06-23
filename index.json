@@ -1,0 +1,28 @@
+{
+  "posts": [
+    {
+      "id": "1",
+      "title": "Butterflies",
+      "content": "Diversity: There are an estimated 15,000 to 20,000 different species of butterflies worldwide. ",
+      "author": "Author One",
+      "date": "2023-10-01",
+      "imageUrl": "https://images.pexels.com/photos/326055/pexels-photo-326055.jpeg"
+    },
+    {
+      "id": "2",
+      "title": "The Ocean",
+      "content": "This is the content of the second post.",
+      "author": "Author Two",
+      "date": "2023-10-02",
+      "imageUrl": "https://images.pexels.com/photos/2274725/pexels-photo-2274725.jpeg"
+    },
+    {
+      "id": "3",
+      "title": "New York ",
+      "content": "This is the content of the third post.",
+      "author": "Author Three",
+      "date": "2023-10-03",
+      "imageUrl": "https://images.pexels.com/photos/2168975/pexels-photo-2168975.jpeg"
+    }
+  ]
+}
