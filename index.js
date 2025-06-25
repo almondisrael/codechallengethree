@@ -43,9 +43,19 @@ function displayPosts(data){
 
         // post excerpt/description
         let postExcerpt = document.createElement('p');
-        postExcerpt.textContent ? post.content : "No description available.";
+        postExcerpt.textContent = post.content || "No description available.";
         postExcerpt.className = 'post-excerpt';
         postDiv.appendChild(postExcerpt);
+
+        // Delete button
+        // let deleteBtn = document.createElement('button');
+        // deleteBtn.textContent = 'Delete';
+        // deleteBtn.className = 'delete-btn';
+        // deleteBtn.onclick = (e) => {
+        //     e.stopPropagation(); // Prevent opening details modal
+        //     handleDelete(post.id, postDiv);
+        // };
+        // postDiv.appendChild(deleteBtn);
 
         // Add click event to open details
         postDiv.addEventListener('click', () => handlePostClick(post));
@@ -85,11 +95,39 @@ function handlePostClick(post){
     detailsText.textContent = post.content || "No content available.";
     detailsContent.appendChild(detailsText);
 
+    // Edit button (now in modal)
+    let editBtn = document.createElement('button');
+    editBtn.textContent = 'Edit';
+    editBtn.className = 'edit-btn';
+    editBtn.onclick = (e) => {
+        e.stopPropagation();
+        detailsOverlay.remove();
+        openEditForm(post);
+    };
+    
+    let deleteBtn = document.createElement('button');
+    deleteBtn.textContent = 'Delete';
+    deleteBtn.className = 'delete-btn';
+    deleteBtn.onclick = (e) => {
+        e.stopPropagation(); // Prevent opening details modal
+        handleDelete(post.id, postDiv);
+    }
+
     // Close button
     let closeBtn = document.createElement('button');
     closeBtn.textContent = 'Close';
     closeBtn.onclick = () => detailsOverlay.remove();
     detailsContent.appendChild(closeBtn);
+
+    // Instead of appending buttons directly to detailsContent:
+    let buttonsDiv = document.createElement('div');
+    buttonsDiv.className = 'details-buttons';
+
+    buttonsDiv.appendChild(editBtn);
+    buttonsDiv.appendChild(deleteBtn);
+    buttonsDiv.appendChild(closeBtn);
+
+    detailsContent.appendChild(buttonsDiv);
 
     // Add content to overlay
     detailsOverlay.appendChild(detailsContent);
@@ -110,28 +148,36 @@ function addNewPostListener(){
     // Prevent multiple add-divs
     if (document.querySelector('.add-div')) return;
 
-    let addDiv = document.createElement('div')
-    addDiv.className = 'add-div'
-    
+    let addDiv = document.createElement('div');
+    addDiv.className = 'add-div';
+
+    let formContent = document.createElement('div');
+    formContent.className = 'add-form-content';
+
+    let formTitle = document.createElement('div');
+    formTitle.className = 'add-form-title';
+    formTitle.textContent = 'Add New Blog'; // or 'Edit Blog'
+    formContent.appendChild(formTitle);
+
     // input field for title
     let titleInput = document.createElement('input')
     titleInput.placeholder = 'add title'
-    addDiv.appendChild(titleInput)
+    formContent.appendChild(titleInput)
 
     // input field for content
     let contentInput = document.createElement('input')
     contentInput.placeholder = 'add content'
-    addDiv.appendChild(contentInput)
+    formContent.appendChild(contentInput)
 
     // input field for author
     let authorInput = document.createElement('input')
     authorInput.placeholder = 'add author'
-    addDiv.appendChild(authorInput)
+    formContent.appendChild(authorInput)
 
     // input field for image url
     let urlInput = document.createElement('input')
     urlInput.placeholder = 'add image url'
-    addDiv.appendChild(urlInput)
+    formContent.appendChild(urlInput)
 
     // Add button
     let submitBtn = document.createElement('button');
@@ -142,15 +188,95 @@ function addNewPostListener(){
         author: authorInput.value,
         imageUrl: urlInput.value
     }, addDiv);
-    addDiv.appendChild(submitBtn);
+    formContent.appendChild(submitBtn);
 
     // Close button
     let closeBtn = document.createElement('button');
     closeBtn.textContent = 'Close';
     closeBtn.onclick = () => addDiv.remove();
-    addDiv.appendChild(closeBtn);
+    formContent.appendChild(closeBtn);
 
+    addDiv.appendChild(formContent);
     document.body.appendChild(addDiv)
+}
+
+// Edit form (reuse add form, but prefill and update)
+function openEditForm(post) {
+    if (document.querySelector('.add-div')) return;
+
+    let addDiv = document.createElement('div');
+    addDiv.className = 'add-div';
+
+    let formContent = document.createElement('div');
+    formContent.className = 'add-form-content';
+
+    let formTitle = document.createElement('div');
+    formTitle.className = 'add-form-title';
+    formTitle.textContent = 'Edit Blog';
+    formContent.appendChild(formTitle);
+
+    // input field for title
+    let titleInput = document.createElement('input')
+    titleInput.value = post.title;
+    formContent.appendChild(titleInput)
+
+    // input field for content
+    let contentInput = document.createElement('input')
+    contentInput.value = post.content;
+    formContent.appendChild(contentInput)
+
+    // input field for author
+    let authorInput = document.createElement('input')
+    authorInput.value = post.author;
+    formContent.appendChild(authorInput)
+
+    // input field for image url
+    let urlInput = document.createElement('input')
+    urlInput.value = post.imageUrl;
+    formContent.appendChild(urlInput)
+
+    // Save button
+    let saveBtn = document.createElement('button');
+    saveBtn.textContent = 'Save';
+    saveBtn.onclick = () => handleEdit(post.id, {
+        title: titleInput.value,
+        content: contentInput.value,
+        author: authorInput.value,
+        imageUrl: urlInput.value
+    }, addDiv);
+    formContent.appendChild(saveBtn);
+
+    // Close button
+    let closeBtn = document.createElement('button');
+    closeBtn.textContent = 'Close';
+    closeBtn.onclick = () => addDiv.remove();
+    formContent.appendChild(closeBtn);
+
+    addDiv.appendChild(formContent);
+    document.body.appendChild(addDiv)
+}
+
+function handleEdit(postId, updatedPost, addDiv) {
+    if (!updatedPost.title || !updatedPost.content || !updatedPost.author || !updatedPost.imageUrl) {
+        alert('Please fill in all fields.');
+        return;
+    }
+
+    fetch(`${url}/${postId}`, {
+        method: 'PUT',
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify(updatedPost)
+    })
+    .then(response => response.json())
+    .then(() => {
+        // Refresh the post list
+        postCardsContainer.innerHTML = '';
+        fetch(url)
+            .then(r => r.json())
+            .then(data => displayPosts(data));
+        addDiv.remove();
+    })
+    .catch(() => alert('Failed to edit post.'));
 }
 
 function handleAdd(postData, addDiv) {
@@ -172,6 +298,21 @@ function handleAdd(postData, addDiv) {
         addDiv.remove();
     })
     .catch(() => alert('Failed to add post.'));
+}
+
+function handleDelete(postId, postDiv) {
+    if (!confirm('Are you sure you want to delete this post?')) return;
+    fetch(`${url}/${postId}`, {
+        method: 'DELETE'
+    })
+    .then(response => {
+        if (response.ok) {
+            postDiv.remove();
+        } else {
+            alert('Failed to delete post.');
+        }
+    })
+    .catch(() => alert('Failed to delete post.'));
 }
 
 // Correct way to add event listener:
